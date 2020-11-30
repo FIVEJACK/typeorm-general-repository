@@ -17,7 +17,7 @@ export class MyEntity {
   @Column()
   name?: string;
 
-  public scopeId(query: ProxyQuery<MyEntity>, id) {
+  public scopeId(query: ProxyQuery<MyEntity>, id: number) {
     return query.andWhere('id = :id', { id: id });
   }
 }

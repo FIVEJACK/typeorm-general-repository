@@ -22,19 +22,19 @@
   "peerDependencies": {
     "typeorm": ">=0.2.29"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
-  },
   "prettier": {
     "printWidth": 80,
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "general-repository",
-  "author": "Rionardo",
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "name": "@itemku/general-repository",
+  "author": "Rionardo (rio@fivejack.com)",
   "module": "dist/general-repository.esm.js",
   "size-limit": [
     {
@@ -49,6 +49,7 @@
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.9.0",
     "husky": "^4.3.0",
+    "ts-jest": "^26.2.0",
     "size-limit": "^4.9.0",
     "sqlite3": "^5.0.0",
     "tsdx": "^0.14.1",

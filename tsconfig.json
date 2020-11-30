@@ -1,13 +1,14 @@
 {
-  "include": ["src", "types", "test"],
+  "include": ["src", "types"],
   "compilerOptions": {
     "target": "ES2017",    
     "module": "ESNext",
     "lib": ["es6"],
     "importHelpers": true,
     "declaration": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "rootDir": "./src",
+    "outDir": "dist",
     "noImplicitAny": true,
     "strictFunctionTypes": true,
     "noImplicitThis": true,

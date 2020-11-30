@@ -6,7 +6,7 @@ type Unmapped = {
 };
 
 type RemapType<T extends Unmapped> = {
-  [K in keyof T & string as RemoveScope<K>]: T[K] extends (query, ...filter: infer P) => ProxyQuery<T> ? (...filter: P) => ProxyQuery<T> : T[K];
+  [K in keyof T & string as RemoveScope<K>]: T[K] extends (query: ProxyQuery<T>, ...filter: infer P) => ProxyQuery<T> ? (...filter: P) => ProxyQuery<T> : T[K];
 };
 
 // type ActionType<T> = (...args: Parameters<T>) => { type: string; payload: ReturnType<T> };
