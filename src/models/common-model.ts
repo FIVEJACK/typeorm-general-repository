@@ -66,10 +66,6 @@ export class CommonModel {
     return query.addOrderBy(this.constructor.name + '.' + 'updated_at', 'DESC');
   }
 
-  public scopeOrderBySequence(query: ProxyQuery<CommonModel>) {
-    return query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'DESC');
-  }
-
   public scopeLastModifiedBy(query: ProxyQuery<CommonModel>, id: any) {
     return query.andWhere(this.constructor.name + '.' + 'last_modified_by = :last_modified_by', {last_modified_by: id});
   }

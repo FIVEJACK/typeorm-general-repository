@@ -1,0 +1,30 @@
+{
+  "root": true,
+  "extends": [ "prettier", "prettier/@typescript-eslint"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "parserOptions": {
+    "jsx": true
+  },
+  "rules": {
+    "no-prototype-builtins": "warn",
+    "no-console": "warn",
+    "camelcase": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts"],
+      "env": {
+        "jest": true
+      },
+      "plugins": ["jest"],
+      "rules": {
+        "jest/no-disabled-tests": "warn",
+        "jest/no-focused-tests": "error",
+        "jest/no-identical-title": "error",
+        "jest/prefer-to-have-length": "warn",
+        "jest/valid-expect": "error"
+      }
+    }
+  ]
+}

@@ -1,103 +1,335 @@
-# TSDX User Guide
+# itemku TypeORM General Repository
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+General Repository for common tasks and adding query helper in Laravel style
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
+# How to use
 
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
-
-## Commands
-
-TSDX scaffolds your new library inside `/src`.
-
-To run TSDX, use:
+## Install
 
 ```bash
-npm start # or yarn start
+yarn install @itemku/general-repository
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+## Quickstart
 
-To do a one-off build, use `npm run build` or `yarn build`.
+### Extends Model & Add Scope
 
-To run tests, use `npm test` or `yarn test`.
+1.  always extends CommonModel, this will have standard properties on created_at and updated_at also some default scope for searching
 
-## Configuration
+```tsx
 
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
 
-### Jest
+@Entity()
 
-Jest tests are set up to run with `npm test` or `yarn test`.
-
-### Bundle Analysis
-
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
-```
-
-### Rollup
-
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
-
-### TypeScript
-
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
+export  class  TestModel  extends  CommonModel {
+.
+.
+.
 }
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+2. Add column & scope for filter , format should be :
+   scopeXXXX(query: ProxyQuery<T>, id)
+   ex :
 
-## Module Formats
+```tsx
+	public  scopeUserId(query: ProxyQuery<TestModel>, id: number) {{
 
-CJS, ESModules, and UMD module formats are supported.
+		return  query.andWhere('user_id = :user_id', { user_id:  id });
 
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+	}
+```
 
-## Named Exports
+3. You could also have more than 1 parameter or no parameter at all
+   ex :
 
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+```tsx
+	public  scopeUserActive(query: ProxyQuery<TestModel>) {{
 
-## Including Styles
+		return  query.andWhere('is_active= :is_active', { is_active:  true});
 
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+	}
 
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+	public  scopeUserTest(query: ProxyQuery<TestModel>, id1: number, id2: number) {{
+		let query = query.andWhere('user_id = :user_id', { user_id:  id1 });
+		query = query.andWhere('id_transaction = :id_transaction ', { id_transaction:  id2 });
+		return query;
+	}
+```
 
-## Publishing to NPM
+### Extends General Repository
 
-We recommend using [np](https://github.com/sindresorhus/np).
+1. Extends General Repository
+
+```tsx
+export class TestRepository extends GeneralRepository<TestModel> {
+  constructor(entity: EntityManager) {
+    super(TestModel, entity);
+  }
+}
+```
+
+2. Override Common Filter
+
+```tsx
+
+protected  commonFilter(queryBuilder: ProxyQuery<TestModel>, filter) {
+
+	super.commonFilter(queryBuilder, filter);
+
+
+
+	const  userId = getDefault(filter['user_id']);
+
+
+	if (userId != undefined) {
+
+	queryBuilder = queryBuilder.UserId(userId);
+
+	}
+
+
+}
+```
+
+# API - Standard Scope
+
+This scope already included in CommonModel no need to create again
+
+### 1) scopeId(query: ProxyQuery<CommonModel>, id: any)
+
+if there's any primary key that's different (not ID) you could override primaryKey() and return the correct Primary Key
+
+```tsx
+public  scopeId(query: ProxyQuery<CommonModel>, id: any) {
+
+	return  query.andWhere(this.constructor.name + '.' + this.primaryKey() + ' = :id', {id:  id});
+
+}
+```
+
+### 2) scopeIds(query: ProxyQuery<CommonModel>, ids: Array<any>)
+
+if there's any primary key that's different (not ID) you could override primaryKey() and return the correct Primary Key
+
+```tsx
+public  scopeIds(query: ProxyQuery<CommonModel>, ids: Array<any>) {
+
+	return  query.andWhere(this.constructor.name + '.' + this.primaryKey() + ' IN (:...ids)', {ids:  ids});
+
+}
+```
+
+### 3) scopeExcludeIds(query: ProxyQuery<CommonModel>, ids: Array<any>)
+
+if there's any primary key that's different (not ID) you could override primaryKey() and return the correct Primary Key
+
+```tsx
+public  scopeExcludeIds(query: ProxyQuery<CommonModel>, ids: Array<any>) {
+
+	return  query.andWhere(this.constructor.name + '.' + this.primaryKey() + ' NOT IN (:...ids)', {ids:  ids});
+
+}
+```
+
+### 4) scopeIsActive(query: ProxyQuery<CommonModel>, is_active = true)
+
+```tsx
+public  scopeIsActive(query: ProxyQuery<CommonModel>, is_active = true) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'is_active = :is_active', {is_active:  is_active});
+
+}
+
+```
+
+### 5) scopeIsFinished(query: ProxyQuery<CommonModel>, is_finished = false)
+
+```tsx
+public  scopeIsFinished(query: ProxyQuery<CommonModel>, is_finished = false) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'is_finished = :is_finished', {is_finished:  	is_finished});
+
+}
+
+```
+
+### 6) scopeStatus(query: ProxyQuery<CommonModel>, is_finished = false)
+
+```tsx
+public  scopeStatus(query: ProxyQuery<CommonModel>, status: number) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'status = :status', {status:  status});
+
+}
+```
+
+### 7) scopeStartDate(query: ProxyQuery<CommonModel>, date: string)
+
+```tsx
+public  scopeStartDate(query: ProxyQuery<CommonModel>, date: string) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'created_at >= :start_date', {start_date:  date + ' 00:00:00'});
+
+}
+```
+
+### 8) scopeStartDate(query: ProxyQuery<CommonModel>, date: string)
+
+```tsx
+public  scopeStartDate(query: ProxyQuery<CommonModel>, date: string) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'created_at >= :start_date', {start_date:  date + ' 00:00:00'});
+
+}
+```
+
+### 9) scopeEndDate(query: ProxyQuery<CommonModel>, date: string)
+
+```tsx
+public  scopeEndDate(query: ProxyQuery<CommonModel>, date: string) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'created_at <= :end_date', {end_date:  date + ' 23:59:59'});
+
+}
+```
+
+### 10) scopeUpdateStartDate(query: ProxyQuery<CommonModel>, date: string)
+
+```tsx
+public  scopeUpdateStartDate(query: ProxyQuery<CommonModel>, date: string) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'updated_at >= :update_start_date', {update_start_date:  date + ' 00:00:00'});
+
+}
+```
+
+### 10) scopeUpdateEndDate(query: ProxyQuery<CommonModel>, date: string)
+
+```tsx
+public  scopeUpdateEndDate(query: ProxyQuery<CommonModel>, date: string) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'updated_at <= :update_end_date', {update_end_date:  date + ' 23:59:59'});
+
+}
+```
+
+### 11) scopeOrderByLatest(query: ProxyQuery<CommonModel>)
+
+```tsx
+public  scopeOrderByLatest(query: ProxyQuery<CommonModel>) {
+
+	return  query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'DESC');
+
+}
+```
+
+### 11) scopeOrderByOldest(query: ProxyQuery<CommonModel>)
+
+```tsx
+public  scopeOrderByOldest(query: ProxyQuery<CommonModel>) {
+
+	return  query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'ASC');
+
+}
+
+```
+
+### 12) scopeOrderByLatestUpdate(query: ProxyQuery<CommonModel>)
+
+```tsx
+public  scopeOrderByLatestUpdate(query: ProxyQuery<CommonModel>) {
+
+	return  query.addOrderBy(this.constructor.name + '.' + 'updated_at', 'DESC');
+
+}
+
+```
+
+### 13) scopeLastModifiedBy(query: ProxyQuery<CommonModel>, id: any)
+
+```tsx
+public  scopeLastModifiedBy(query: ProxyQuery<CommonModel>, id: any) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'last_modified_by = :last_modified_by', {last_modified_by:  id});
+
+}
+
+```
+
+### 13) scopeLastModifiedById(query: ProxyQuery<CommonModel>, id: any)
+
+```tsx
+
+public  (query: ProxyQuery<CommonModel>, id: any) {
+
+	return  query.andWhere(this.constructor.name + '.' + 'last_modified_by_id = :last_modified_by_id', {last_modified_by_id:  id});
+
+}
+
+
+```
+
+## Full Example
+
+### Model
+
+```tsx
+
+@Entity()
+
+export  class  TestModel  extends  CommonModel {
+
+	@PrimaryColumn()
+
+	@Generated()
+
+	id: string;
+
+
+
+	@Column()
+
+	user_id: number;
+
+
+
+	@Column()
+
+	balance: number;
+
+
+
+	@Column()
+
+	withdraw_balance: number;
+
+
+
+	public  scopeUserId(query: ProxyQuery<TestModel>, id: number) {{
+
+	return  query.andWhere('user_id = :user_id', { user_id:  id });
+
+	}
+}
+```
+
+### Repository
+
+```tsx
+export class TestRepository extends GeneralRepository<TestModel> {
+  constructor(entity: EntityManager) {
+    super(TestModel, entity);
+  }
+
+  protected commonFilter(queryBuilder: ProxyQuery<TestModel>, filter) {
+    super.commonFilter(queryBuilder, filter);
+
+    const userId = getDefault(filter['user_id']);
+
+    if (userId != undefined) {
+      queryBuilder = queryBuilder.UserId(userId);
+    }
+  }
+}
+```

@@ -225,8 +225,6 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
       commonQueryBuilder = commonQueryBuilder.OrderByOldest();
     } else if (sort == 'latest_update') {
       commonQueryBuilder = commonQueryBuilder.OrderByLatestUpdate();
-    } else if (sort == 'sequence') {
-      commonQueryBuilder = commonQueryBuilder.OrderBySequence();
     } else {
       commonQueryBuilder = commonQueryBuilder.OrderByLatest();
     }
