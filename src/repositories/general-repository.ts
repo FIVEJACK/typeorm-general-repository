@@ -164,7 +164,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
 
     const column: any = {};
     for (let i = 0; i < columnName.length; i++) {
-      column.columnName[i] = 1;
+      column[columnName[i]] = 1;
     }
 
     if (id != undefined) {
