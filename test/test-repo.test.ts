@@ -1,13 +1,5 @@
-import {
-  Column,
-  createConnection,
-  Entity,
-  getConnection,
-  getManager,
-  getRepository,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { createProxy, ProxyQuery } from '../src';
+import {Column, createConnection, Entity, getConnection, getManager, getRepository, PrimaryGeneratedColumn} from 'typeorm';
+import {createProxy, ProxyQuery} from '../src';
 
 @Entity()
 export class MyEntity {
@@ -18,7 +10,7 @@ export class MyEntity {
   name?: string;
 
   public scopeId(query: ProxyQuery<MyEntity>, id: number) {
-    return query.andWhere('id = :id', { id: id });
+    return query.andWhere('id = :id', {id: id});
   }
 }
 
@@ -54,6 +46,6 @@ it('should able to add proxy and do query', async done => {
   const proxObj = createProxy(MyEntity, queryBuilder);
   const result = await proxObj.Id(1).getMany();
 
-  expect(result).toEqual([{ id: 1, name: 'itemku' }]);
+  expect(result).toEqual([{id: 1, name: 'itemku'}]);
   done();
 });

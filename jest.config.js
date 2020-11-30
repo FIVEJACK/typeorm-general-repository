@@ -14,6 +14,5 @@ module.exports = {
     "Repositories/(.*)$": "<rootDir>/src/repositories/$1",
     "Models/(.*)$": "<rootDir>/src/models/$1",
     "Helpers/(.*)$": "<rootDir>/src/helpers/$1",
-
   },  
 };
