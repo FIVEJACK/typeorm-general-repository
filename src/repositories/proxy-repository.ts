@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { SelectQueryBuilder } from 'typeorm';
 
 type Unmapped = {

@@ -1,15 +1,10 @@
-import { IRepository } from 'Repositories/i-repository';
+import {IRepository} from 'Repositories/i-repository';
 import returnObject from 'Helpers/return-object';
-import {
-  ObjectLiteral,
-  Repository,
-  SelectQueryBuilder,
-  EntityManager,
-} from 'typeorm';
-import { DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE } from 'Helpers/constants';
-import { getDefault } from 'Helpers/common-helper';
-import { createProxy, ProxyQuery } from './proxy-repository';
-import { CommonModel } from 'Models/common-model';
+import {ObjectLiteral, Repository, SelectQueryBuilder, EntityManager} from 'typeorm';
+import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from 'Helpers/constants';
+import {getDefault} from 'Helpers/common-helper';
+import {createProxy, ProxyQuery} from './proxy-repository';
+import {CommonModel} from 'Models/common-model';
 
 export abstract class GeneralRepository<T> implements IRepository<T> {
   public model: new () => T;
@@ -37,7 +32,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
         await modelRepo.insert(insertData);
 
         return insertData;
-      })
+      }),
     );
 
     toReturn.setData(data as any);
@@ -56,7 +51,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     const result = await queryBuilder
       .update()
       .set(data)
-      .where('id = :id', { id: id })
+      .where('id = :id', {id: id})
       .execute();
     toReturn.setData(result as any, 1, 1, 1);
     return toReturn;
@@ -67,7 +62,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     const queryBuilder = this.repo().createQueryBuilder();
     const result = await queryBuilder
       .delete()
-      .where('id = :id', { id: id })
+      .where('id = :id', {id: id})
       .execute();
     toReturn.setData(result as any, 1, 1, 1);
     return toReturn;
@@ -78,7 +73,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     const queryBuilder = this.repo().createQueryBuilder();
     const result = await queryBuilder
       .select()
-      .where('id = :id', { id: id })
+      .where('id = :id', {id: id})
       .getOne();
     toReturn.setData(result as any, 1, 1, 1);
     return toReturn;
@@ -111,34 +106,19 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     const proxyQueryBuilder = createProxy(this.model, queryBuilder);
 
     this.applyAllQuery(proxyQueryBuilder, filter);
-    const [result, total, itemPerPage, page] = await this.getPaginated(
-      proxyQueryBuilder,
-      filter
-    );
+    const [result, total, itemPerPage, page] = await this.getPaginated(proxyQueryBuilder, filter);
 
     toReturn.setData(result, total, itemPerPage, page);
     return toReturn;
   }
 
-  protected async getPaginated(
-    queryBuilder: SelectQueryBuilder<T>,
-    filter: ObjectLiteral
-  ) {
-    const take =
-      filter['per_page'] === undefined
-        ? DEFAULT_MAX_ITEM_PER_PAGE
-        : filter['per_page'];
+  protected async getPaginated(queryBuilder: SelectQueryBuilder<T>, filter: ObjectLiteral) {
+    const take = filter['per_page'] === undefined ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
     queryBuilder.limit(take);
-    const skip =
-      filter['page'] === undefined
-        ? (DEFAULT_PAGE - 1) * take
-        : (filter['page'] - 1) * take;
+    const skip = filter['page'] === undefined ? (DEFAULT_PAGE - 1) * take : (filter['page'] - 1) * take;
     queryBuilder.offset(skip);
 
-    const itemPerPage =
-      filter['per_page'] === undefined
-        ? DEFAULT_MAX_ITEM_PER_PAGE
-        : filter['per_page'];
+    const itemPerPage = filter['per_page'] === undefined ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
     const page = filter['page'] === undefined ? DEFAULT_PAGE : filter['page'];
 
     const [result, count] = await this.executeRetrieveDataQuery(queryBuilder);
@@ -158,9 +138,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
 
   return [result, totalRaw.count];
   */
-  protected async executeRetrieveDataQuery(
-    queryBuilder: SelectQueryBuilder<T>
-  ) {
+  protected async executeRetrieveDataQuery(queryBuilder: SelectQueryBuilder<T>) {
     const [result, total] = await queryBuilder.getManyAndCount();
 
     return [result, total];
@@ -214,29 +192,19 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     }
 
     if (update_start_date != undefined && column['updated_at'] != undefined) {
-      commonQueryBuilder = commonQueryBuilder.UpdateStartDate(
-        update_start_date
-      );
+      commonQueryBuilder = commonQueryBuilder.UpdateStartDate(update_start_date);
     }
 
     if (update_end_date != undefined && column['updated_at'] != undefined) {
       commonQueryBuilder = commonQueryBuilder.UpdateEndDate(update_end_date);
     }
 
-    if (
-      last_modified_by != undefined &&
-      column['last_modified_by'] != undefined
-    ) {
+    if (last_modified_by != undefined && column['last_modified_by'] != undefined) {
       commonQueryBuilder = commonQueryBuilder.LastModifiedBy(last_modified_by);
     }
 
-    if (
-      last_modified_by_id != undefined &&
-      column['last_modified_by_id'] != undefined
-    ) {
-      commonQueryBuilder = commonQueryBuilder.LastModifiedById(
-        last_modified_by_id
-      );
+    if (last_modified_by_id != undefined && column['last_modified_by_id'] != undefined) {
+      commonQueryBuilder = commonQueryBuilder.LastModifiedById(last_modified_by_id);
     }
   }
 

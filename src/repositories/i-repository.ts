@@ -1,4 +1,4 @@
-import { ObjectLiteral } from 'typeorm';
+import {ObjectLiteral} from 'typeorm';
 
 export interface IRepository<T> {
   insertData(data: T): any;
