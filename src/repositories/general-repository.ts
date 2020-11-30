@@ -1,10 +1,10 @@
-import {IRepository} from 'Repositories/i-repository';
-import returnObject from 'Helpers/return-object';
+import {IRepository} from './i-repository';
+import returnObject from '../helpers/return-object';
 import {ObjectLiteral, Repository, SelectQueryBuilder, EntityManager} from 'typeorm';
-import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from 'Helpers/constants';
-import {getDefault} from 'Helpers/common-helper';
+import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from '../helpers/constants';
+import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
-import {CommonModel} from 'Models/common-model';
+import {CommonModel} from '../models/common-model';
 
 export abstract class GeneralRepository<T> implements IRepository<T> {
   public model: new () => T;

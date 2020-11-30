@@ -1,4 +1,4 @@
-import {ProxyQuery} from 'repositories/proxy-repository';
+import {ProxyQuery} from '../repositories/proxy-repository';
 import {CreateDateColumn, UpdateDateColumn} from 'typeorm';
 
 export class CommonModel {
