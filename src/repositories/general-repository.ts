@@ -144,7 +144,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     return [result, total];
   }
 
-  protected commonFilter(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+  protected commonFilter(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
     let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
 
     const id = getDefault(filter['id']);
@@ -208,7 +208,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     }
   }
 
-  protected applySelect(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+  protected applySelect(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
     const selects = getDefault(filter['selects']);
 
     if (selects != undefined) {
@@ -216,7 +216,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     }
   }
 
-  protected commonSort(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+  protected commonSort(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
     let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
 
     const sort = getDefault(filter['sort']);
@@ -230,15 +230,15 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     }
   }
 
-  protected applyFilter(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+  protected applyFilter(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
     this.commonFilter(queryBuilder, filter);
   }
 
-  protected applySort(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+  protected applySort(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
     this.commonSort(queryBuilder, filter);
   }
 
-  protected applyAllQuery(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+  protected applyAllQuery(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
     this.applySelect(queryBuilder, filter);
     this.applyFilter(queryBuilder, filter);
     this.applySort(queryBuilder, filter);
