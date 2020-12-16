@@ -1,8 +1,8 @@
-import {Column, createConnection, Entity, getConnection, getManager, getRepository, PrimaryGeneratedColumn} from 'typeorm';
-import {createProxy, ProxyQuery} from '../src';
+import {Column, createConnection, Entity, EntityManager, getConnection, getManager, getRepository, PrimaryGeneratedColumn} from 'typeorm';
+import {CommonModel, createProxy, GeneralRepository, ProxyQuery} from '../src';
 
 @Entity()
-export class MyEntity {
+export class MyEntity extends CommonModel {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -14,8 +14,14 @@ export class MyEntity {
   }
 }
 
-beforeEach(() => {
-  return createConnection({
+export class MyRepository extends GeneralRepository<MyEntity> {
+  constructor(entity: EntityManager) {
+    super(MyEntity, entity);
+  }
+}
+
+beforeEach(async () => {
+  await createConnection({
     type: 'sqlite',
     database: ':memory:',
     dropSchema: true,
@@ -25,9 +31,9 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   let conn = getConnection();
-  return conn.close();
+  return await conn.close();
 });
 
 it('should able to add proxy and do query', async done => {
@@ -46,6 +52,42 @@ it('should able to add proxy and do query', async done => {
   const proxObj = createProxy(MyEntity, queryBuilder);
   const result = await proxObj.Id(1).getMany();
 
-  expect(result).toEqual([{id: 1, name: 'itemku'}]);
+  expect(result[0].id).toEqual(1);
+  expect(result[0].name).toEqual('itemku');
   done();
+});
+
+it('should handle per_page = 0 for retrieve', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  await getRepository(MyEntity).insert({
+    name: 'fivejack',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  const result = await repo.retrieveData({per_page: 0});
+
+  expect(result.item_per_page).toEqual(0);
+  expect(result.data[0].id).toEqual(2);
+  expect(result.data[0].name).toEqual('fivejack');
+});
+
+it('should handle page = 0 for retrieve', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  await getRepository(MyEntity).insert({
+    name: 'fivejack',
+  });
+
+  const repo = new MyRepository(getManager());
+  const result = await repo.retrieveData({page: 0});
+
+  expect(result.current_page).toEqual(1);
+  expect(result.data[0].id).toEqual(2);
+  expect(result.data[0].name).toEqual('fivejack');
 });

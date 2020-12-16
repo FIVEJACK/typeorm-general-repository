@@ -6,7 +6,7 @@ import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
 import {CommonModel} from '../models/common-model';
 
-export abstract class GeneralRepository<T> implements IRepository<T> {
+export abstract class GeneralRepository<T extends CommonModel> implements IRepository<T> {
   public model: new () => T;
   protected entity: EntityManager;
   public queryBuilder: SelectQueryBuilder<T>;
@@ -50,7 +50,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
 
     const result = await queryBuilder
       .update()
-      .set(data)
+      .set(data as any)
       .where('id = :id', {id: id})
       .execute();
     toReturn.setData(result as any, 1, 1, 1);
@@ -85,7 +85,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     const modelRepo = this.repo();
 
     try {
-      await modelRepo.insert(data);
+      await modelRepo.insert(data as any);
       toReturn.setData(data as any);
     } catch (error) {
       throw error;
@@ -103,7 +103,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
       queryBuilder = queryBuilder.setLock('pessimistic_write');
     }
 
-    const proxyQueryBuilder = createProxy(this.model, queryBuilder);
+    const proxyQueryBuilder = createProxy(this.model as any, queryBuilder);
 
     this.applyAllQuery(proxyQueryBuilder, filter);
     const [result, total, itemPerPage, page] = await this.getPaginated(proxyQueryBuilder, filter);
@@ -113,13 +113,15 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
   }
 
   protected async getPaginated(queryBuilder: SelectQueryBuilder<T>, filter: ObjectLiteral) {
-    const take = filter['per_page'] === undefined ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
-    queryBuilder.limit(take);
-    const skip = filter['page'] === undefined ? (DEFAULT_PAGE - 1) * take : (filter['page'] - 1) * take;
-    queryBuilder.offset(skip);
+    const itemPerPage = filter['per_page'] === undefined || filter['per_page'] < 0 ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
+    const page = filter['page'] === undefined || filter['page'] <= 0 ? DEFAULT_PAGE : filter['page'];
 
-    const itemPerPage = filter['per_page'] === undefined ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
-    const page = filter['page'] === undefined ? DEFAULT_PAGE : filter['page'];
+    if (itemPerPage > 0) {
+      queryBuilder.limit(itemPerPage);
+    }
+
+    const skip = (page - 1) * itemPerPage;
+    queryBuilder.offset(skip);
 
     const [result, count] = await this.executeRetrieveDataQuery(queryBuilder);
 
@@ -138,13 +140,14 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
 
   return [result, totalRaw.count];
   */
+
   protected async executeRetrieveDataQuery(queryBuilder: SelectQueryBuilder<T>) {
     const [result, total] = await queryBuilder.getManyAndCount();
 
     return [result, total];
   }
 
-  protected commonFilter(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
+  protected commonFilter(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
     let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
 
     const id = getDefault(filter['id']);
@@ -216,7 +219,7 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     }
   }
 
-  protected commonSort(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
+  protected commonSort(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
     let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
 
     const sort = getDefault(filter['sort']);
@@ -230,15 +233,15 @@ export abstract class GeneralRepository<T> implements IRepository<T> {
     }
   }
 
-  protected applyFilter(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
+  protected applyFilter(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
     this.commonFilter(queryBuilder, filter);
   }
 
-  protected applySort(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
+  protected applySort(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
     this.commonSort(queryBuilder, filter);
   }
 
-  protected applyAllQuery(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
+  protected applyAllQuery(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
     this.applySelect(queryBuilder, filter);
     this.applyFilter(queryBuilder, filter);
     this.applySort(queryBuilder, filter);
