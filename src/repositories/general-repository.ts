@@ -36,6 +36,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     );
 
     toReturn.setData(data as any);
+    return toReturn;
   }
 
   async updateById(id: number, data: T) {
