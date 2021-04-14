@@ -26,16 +26,15 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   public async insertBulkData(data: T[]) {
     const toReturn = new returnObject();
 
-    await Promise.all(
-      data.map(async (insertData: any) => {
-        const modelRepo = this.repo();
-        await modelRepo.insert(insertData);
+    const modelRepo = this.repo();
 
-        return insertData;
-      }),
-    );
+    try {
+      await modelRepo.insert(data as any);
+      toReturn.setData(data as any);
+    } catch (error) {
+      throw error;
+    }
 
-    toReturn.setData(data as any);
     return toReturn;
   }
 
