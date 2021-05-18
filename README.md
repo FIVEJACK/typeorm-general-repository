@@ -219,7 +219,7 @@ public  scopeUpdateEndDate(query: ProxyQuery<CommonModel>, date: string) {
 ```tsx
 public  scopeOrderByLatest(query: ProxyQuery<CommonModel>) {
 
-	return  query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'DESC');
+	return  query.addOrderBy(this.constructor.name + '.' + 'created_at', 'DESC');
 
 }
 ```
@@ -229,7 +229,7 @@ public  scopeOrderByLatest(query: ProxyQuery<CommonModel>) {
 ```tsx
 public  scopeOrderByOldest(query: ProxyQuery<CommonModel>) {
 
-	return  query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'ASC');
+	return  query.addOrderBy(this.constructor.name + '.' + 'created_at', 'ASC');
 
 }
 

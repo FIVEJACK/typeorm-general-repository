@@ -54,11 +54,11 @@ export abstract class CommonModel {
   }
 
   public scopeOrderByLatest(query: any) {
-    return query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'DESC');
+    return query.addOrderBy(this.constructor.name + '.' + 'created_at', 'DESC');
   }
 
   public scopeOrderByOldest(query: any) {
-    return query.addOrderBy(this.constructor.name + '.' + this.primaryKey(), 'ASC');
+    return query.addOrderBy(this.constructor.name + '.' + 'created_at', 'ASC');
   }
 
   public scopeOrderByLatestUpdate(query: any) {
