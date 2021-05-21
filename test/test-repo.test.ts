@@ -71,23 +71,19 @@ it('should handle per_page = 0 for retrieve', async () => {
   const result = await repo.retrieveData({per_page: 0});
 
   expect(result.item_per_page).toEqual(0);
-  expect(result.data[0].id).toEqual(2);
-  expect(result.data[0].name).toEqual('fivejack');
+  expect(result.data[0].id).toEqual(1);
+  expect(result.data[0].name).toEqual('itemku');
 });
 
-it('should handle page = 0 for retrieve', async () => {
-  await getRepository(MyEntity).insert({
-    name: 'itemku',
-  });
-
-  await getRepository(MyEntity).insert({
-    name: 'fivejack',
-  });
-
+it('should handle multiple input', async () => {
   const repo = new MyRepository(getManager());
-  const result = await repo.retrieveData({page: 0});
+  let model = new repo.model();
+  model.name = 'wow';
+  let model2 = new repo.model();
+  model2.name = 'itemku';
+  const result = await repo.insertBulkData([model, model2]);
 
   expect(result.current_page).toEqual(1);
-  expect(result.data[0].id).toEqual(2);
-  expect(result.data[0].name).toEqual('fivejack');
+  expect(result.data[0].id).toEqual(1);
+  expect(result.data[0].name).toEqual('wow');
 });
