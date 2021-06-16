@@ -212,10 +212,16 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   protected applySelect(queryBuilder: ProxyQuery<any>, filter: ObjectLiteral) {
-    const selects = getDefault(filter['selects']);
+    const selects: Array<string> = getDefault(filter['selects']);
 
-    if (selects != undefined) {
-      queryBuilder = queryBuilder.select(selects);
+    if (selects != undefined && Array.isArray(selects)) {
+      let arrSelects = [];
+
+      for (let i = 0; i < selects.length; i++) {
+        arrSelects[i] = this.model.name + '.' + selects[i];
+      }
+
+      queryBuilder = queryBuilder.select(arrSelects);
     }
   }
 
