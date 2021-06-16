@@ -87,3 +87,21 @@ it('should handle multiple input', async () => {
   expect(result.data[0].id).toEqual(1);
   expect(result.data[0].name).toEqual('wow');
 });
+
+it('should handle selects input', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  await getRepository(MyEntity).insert({
+    name: 'fivejack',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  const result = await repo.retrieveData({selects: ['id']});
+
+  expect(result.data[0]).toEqual({id: 1});
+  expect(result.data[0].id).toEqual(1);
+  expect(result.data[0].name).toBeUndefined();
+});
