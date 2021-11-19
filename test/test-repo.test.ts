@@ -36,7 +36,7 @@ afterEach(async () => {
   return await conn.close();
 });
 
-it('should able to add proxy and do query', async done => {
+it('should able to add proxy and do query', async (done) => {
   await getRepository(MyEntity).insert({
     name: 'itemku',
   });
@@ -45,9 +45,7 @@ it('should able to add proxy and do query', async done => {
     name: 'fivejack',
   });
 
-  const queryBuilder = getManager()
-    .getRepository(MyEntity)
-    .createQueryBuilder();
+  const queryBuilder = getManager().getRepository(MyEntity).createQueryBuilder();
 
   const proxObj = createProxy(MyEntity, queryBuilder);
   const result = await proxObj.Id(1).getMany();
@@ -104,4 +102,22 @@ it('should handle selects input', async () => {
   expect(result.data[0]).toEqual({id: 1});
   expect(result.data[0].id).toEqual(1);
   expect(result.data[0].name).toBeUndefined();
+});
+
+it('should handle retrieve by id return 0 if no data instead of 1', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  await getRepository(MyEntity).insert({
+    name: 'fivejack',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  const result = await repo.findById(3);
+  expect(result.total_item).toEqual(0);
+
+  const result2 = await repo.findById(1);
+  expect(result2.total_item).toEqual(1);
 });
