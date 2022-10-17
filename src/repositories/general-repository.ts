@@ -101,8 +101,6 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   async retrieveData(filter: ObjectLiteral, lockForUpdate: boolean = false) {
-    const toReturn = new returnObject();
-
     let queryBuilder = this.repo().createQueryBuilder();
 
     if (lockForUpdate) {
@@ -115,16 +113,27 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const [result, total, itemPerPage, page] = await this.getPaginated(proxyQueryBuilder, filter);
 
     if (this.useSimplePagination) {
-      const simpleReturn = new SimplePaginationReturnObject();
-      const prevPage = Math.abs(page - 1) ? Math.abs(page - 1) : null;
-      simpleReturn.setData(result, itemPerPage, page, prevPage, page + 1);
-      return simpleReturn;
-    } else {
-      toReturn.setData(result, total, itemPerPage, page);
-      return toReturn;
+      return this.returnSimplePagination(result, itemPerPage, page);
     }
+    return this.returnBasicPagination(result, total, itemPerPage, page);
   }
 
+  private returnSimplePagination(result: any, itemPerPage: number, page: number) {
+    const toReturn = new SimplePaginationReturnObject();
+
+    const prevPage = Math.abs(page - 1) ? Math.abs(page - 1) : null;
+    toReturn.setData(result, itemPerPage, page, prevPage, page + 1);
+
+    return toReturn;
+  }
+
+  private returnBasicPagination(result: any, total: number, itemPerPage: number, page: number) {
+    const toReturn = new returnObject();
+
+    toReturn.setData(result, total, itemPerPage, page);
+
+    return toReturn;
+  }
   protected async getPaginated(queryBuilder: SelectQueryBuilder<T>, filter: ObjectLiteral) {
     const itemPerPage = filter['per_page'] === undefined || filter['per_page'] < 0 ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
     const page = filter['page'] === undefined || filter['page'] <= 0 ? DEFAULT_PAGE : filter['page'];
@@ -157,7 +166,6 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   protected async executeRetrieveDataQuery(queryBuilder: SelectQueryBuilder<T>) {
     if (this.useSimplePagination) {
       const result = await queryBuilder.getMany();
-
       return [result];
     }
     const [result, total] = await queryBuilder.getManyAndCount();
