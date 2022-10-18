@@ -5,7 +5,7 @@ import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from '../helpers/constants';
 import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
 import {CommonModel} from '../models/common-model';
-import SimplePaginationReturnObject from '../helpers/return-simple-pagination-object';
+import simplePaginationReturnObject from '../helpers/return-simple-pagination-object';
 
 export abstract class GeneralRepository<T extends CommonModel> implements IRepository<T> {
   public model: new () => T;
@@ -119,10 +119,10 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   private returnSimplePagination(result: any, itemPerPage: number, page: number) {
-    const toReturn = new SimplePaginationReturnObject();
+    const toReturn = new simplePaginationReturnObject();
 
     const prevPage = Math.abs(page - 1) ? Math.abs(page - 1) : null;
-    toReturn.setData(result, itemPerPage, page, prevPage, page + 1);
+    toReturn.setData(result, itemPerPage, page, prevPage, page + 1, result.length);
 
     return toReturn;
   }
