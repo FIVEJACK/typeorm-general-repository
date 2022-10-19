@@ -36,7 +36,7 @@ afterEach(async () => {
   return await conn.close();
 });
 
-it('should able to add proxy and do query', async (done) => {
+it('should able to add proxy and do query', async done => {
   await getRepository(MyEntity).insert({
     name: 'itemku',
   });
@@ -45,7 +45,9 @@ it('should able to add proxy and do query', async (done) => {
     name: 'fivejack',
   });
 
-  const queryBuilder = getManager().getRepository(MyEntity).createQueryBuilder();
+  const queryBuilder = getManager()
+    .getRepository(MyEntity)
+    .createQueryBuilder();
 
   const proxObj = createProxy(MyEntity, queryBuilder);
   const result = await proxObj.Id(1).getMany();
@@ -99,7 +101,6 @@ it('should handle selects input', async () => {
 
   const result = await repo.retrieveData({selects: ['id']});
 
-  expect(result.data[0]).toEqual({id: 1});
   expect(result.data[0].id).toEqual(1);
   expect(result.data[0].name).toBeUndefined();
 });

@@ -5,11 +5,13 @@ import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from '../helpers/constants';
 import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
 import {CommonModel} from '../models/common-model';
+import simplePaginationReturnObject from '../helpers/return-simple-pagination-object';
 
 export abstract class GeneralRepository<T extends CommonModel> implements IRepository<T> {
   public model: new () => T;
   protected entity: EntityManager;
   public queryBuilder: SelectQueryBuilder<T>;
+  public useSimplePagination: boolean = false;
 
   protected item_per_page = 10;
   protected primaryKey = 'id';
@@ -60,7 +62,10 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   async deleteById(id: number) {
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    const result = await queryBuilder.delete().where('id = :id', {id: id}).execute();
+    const result = await queryBuilder
+      .delete()
+      .where('id = :id', {id: id})
+      .execute();
     toReturn.setData(result as any, 1, 1, 1);
     return toReturn;
   }
@@ -68,7 +73,10 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   async findById(id: number) {
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    const result = await queryBuilder.select().where('id = :id', {id: id}).getOne();
+    const result = await queryBuilder
+      .select()
+      .where('id = :id', {id: id})
+      .getOne();
     const totalItem = result ? 1 : 0;
     toReturn.setData(result as any, totalItem, totalItem, 1);
     return toReturn;
@@ -88,10 +96,11 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
 
     return toReturn;
   }
+  protected setuseSimplePagination(value: boolean = false) {
+    this.useSimplePagination = value;
+  }
 
   async retrieveData(filter: ObjectLiteral, lockForUpdate: boolean = false) {
-    const toReturn = new returnObject();
-
     let queryBuilder = this.repo().createQueryBuilder();
 
     if (lockForUpdate) {
@@ -103,10 +112,28 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     this.applyAllQuery(proxyQueryBuilder, filter);
     const [result, total, itemPerPage, page] = await this.getPaginated(proxyQueryBuilder, filter);
 
-    toReturn.setData(result, total, itemPerPage, page);
+    if (this.useSimplePagination) {
+      return this.returnSimplePagination(result, itemPerPage, page);
+    }
+    return this.returnBasicPagination(result, total, itemPerPage, page);
+  }
+
+  private returnSimplePagination(result: any, itemPerPage: number, page: number) {
+    const toReturn = new simplePaginationReturnObject();
+
+    const prevPage = Math.abs(page - 1) ? Math.abs(page - 1) : null;
+    toReturn.setData(result, itemPerPage, page, prevPage, page + 1, result.length);
+
     return toReturn;
   }
 
+  private returnBasicPagination(result: any, total: number, itemPerPage: number, page: number) {
+    const toReturn = new returnObject();
+
+    toReturn.setData(result, total, itemPerPage, page);
+
+    return toReturn;
+  }
   protected async getPaginated(queryBuilder: SelectQueryBuilder<T>, filter: ObjectLiteral) {
     const itemPerPage = filter['per_page'] === undefined || filter['per_page'] < 0 ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
     const page = filter['page'] === undefined || filter['page'] <= 0 ? DEFAULT_PAGE : filter['page'];
@@ -137,13 +164,16 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   */
 
   protected async executeRetrieveDataQuery(queryBuilder: SelectQueryBuilder<T>) {
+    if (this.useSimplePagination) {
+      const result = await queryBuilder.getMany();
+      return [result];
+    }
     const [result, total] = await queryBuilder.getManyAndCount();
-
     return [result, total];
   }
 
   protected commonFilter(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
-    let commonQueryBuilder = queryBuilder as any as ProxyQuery<CommonModel>;
+    let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
 
     const id = getDefault(filter['id']);
     const ids = getDefault(filter['ids']);
@@ -155,10 +185,13 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const update_end_date = getDefault(filter['update_date_range_end']);
     const last_modified_by = getDefault(filter['last_modified_by']);
     const last_modified_by_id = getDefault(filter['last_modified_by_id']);
+    const use_simple_pagination = getDefault(filter['use_simple_pagination'], false);
+
+    this.setuseSimplePagination(Boolean(use_simple_pagination));
 
     const columnName = this.repo()
       .manager.connection.getMetadata(this.model)
-      .ownColumns.map((column) => column.propertyName);
+      .ownColumns.map(column => column.propertyName);
 
     const column: any = {};
     for (let i = 0; i < columnName.length; i++) {
@@ -221,7 +254,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   protected commonSort(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
-    let commonQueryBuilder = queryBuilder as any as ProxyQuery<CommonModel>;
+    let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
 
     const sort = getDefault(filter['sort']);
 
