@@ -1,8 +1,12 @@
 {
-  "version": "0.7.4",
+  "version": "0.7.5",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FIVEJACK/typeorm-general-repository.git"
+  },
   "files": [
     "dist",
     "src"
@@ -23,7 +27,7 @@
     "typeorm": ">=0.2.29"
   },
   "name": "@itemku/general-repository",
-  "author": "Rionardo (rio@fivejack.com)",
+  "author": "itemku (cto@fivejack.com)",
   "module": "dist/general-repository.esm.js",
   "size-limit": [
     {
@@ -44,6 +48,13 @@
     "@size-limit/preset-small-lib": "^4.9.0",
     "@typescript-eslint/eslint-plugin": "^4.8.2",
     "@typescript-eslint/parser": "^4.8.2",
+    "eslint-config-koa": "^2.0.2",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jest": "^24.0.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "husky": "^4.3.0",
     "jest": "^26.6.3",
     "size-limit": "^4.9.0",
@@ -51,14 +62,7 @@
     "ts-jest": "^26.2.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.0.3",
-    "typescript": "^4.1.2",
-    "eslint-config-koa": "^2.0.2",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-jest": "^24.0.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
+    "typescript": "^4.1.2"
   },
   "dependencies": {
     "typeorm": "^0.2.29"
