@@ -1,6 +1,6 @@
 import {SUCCESS_STATUS_CODE, INTERNAL_ERROR_STATUS_CODE, DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE, BAD_REQUEST_STATUS_CODE} from './constants';
 
-export default class simplePaginationReturnObject {
+export default class SimplePaginationReturnObject {
   public success: boolean;
   public data: any;
   public message: string;
@@ -58,6 +58,6 @@ export default class simplePaginationReturnObject {
   }
 }
 
-export const getFirstData = (returnObject: simplePaginationReturnObject) => {
+export const getFirstData = (returnObject: SimplePaginationReturnObject) => {
   return returnObject.data[0];
 };
