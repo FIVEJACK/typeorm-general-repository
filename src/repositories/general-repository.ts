@@ -62,10 +62,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   async deleteById(id: number) {
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    const result = await queryBuilder
-      .delete()
-      .where('id = :id', {id: id})
-      .execute();
+    const result = await queryBuilder.delete().where('id = :id', {id: id}).execute();
     toReturn.setData(result as any, 1, 1, 1);
     return toReturn;
   }
@@ -73,10 +70,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   async findById(id: number) {
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    const result = await queryBuilder
-      .select()
-      .where('id = :id', {id: id})
-      .getOne();
+    const result = await queryBuilder.select().where('id = :id', {id: id}).getOne();
     const totalItem = result ? 1 : 0;
     toReturn.setData(result as any, totalItem, totalItem, 1);
     return toReturn;
@@ -122,7 +116,8 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const toReturn = new simplePaginationReturnObject();
 
     const prevPage = Math.abs(page - 1) ? Math.abs(page - 1) : null;
-    toReturn.setData(result, itemPerPage, page, prevPage, page + 1, result.length);
+    const nextPage = result.length > 0 ? page + 1 : null;
+    toReturn.setData(result, itemPerPage, page, prevPage, nextPage, result.length);
 
     return toReturn;
   }
@@ -173,7 +168,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   protected commonFilter(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
-    let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
+    let commonQueryBuilder = queryBuilder as any as ProxyQuery<CommonModel>;
 
     const id = getDefault(filter['id']);
     const ids = getDefault(filter['ids']);
@@ -191,7 +186,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
 
     const columnName = this.repo()
       .manager.connection.getMetadata(this.model)
-      .ownColumns.map(column => column.propertyName);
+      .ownColumns.map((column) => column.propertyName);
 
     const column: any = {};
     for (let i = 0; i < columnName.length; i++) {
@@ -254,7 +249,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   protected commonSort(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
-    let commonQueryBuilder = (queryBuilder as any) as ProxyQuery<CommonModel>;
+    let commonQueryBuilder = queryBuilder as any as ProxyQuery<CommonModel>;
 
     const sort = getDefault(filter['sort']);
 
