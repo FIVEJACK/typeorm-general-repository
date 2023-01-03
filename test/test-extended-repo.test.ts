@@ -90,7 +90,7 @@ it('should return using simple pagination (getMany)', async () => {
   const result: SimplePaginationReturnObject = await repo.retrieveData({name: 'itemku', use_simple_pagination: true});
 
   expect(repo.useSimplePagination).toEqual(true);
-  expect(result).toEqual({current_page: 1, data: [{created_at: mockDateNow, id: 1, name: 'itemku', updated_at: mockDateNow}], http_status_code: 200, item_per_page: 10, message: 'Success', next_page: 2, prev_page: null, success: true, total_item: 1});
+  expect(result).toEqual({current_page: 1, data: [{created_at: mockDateNow, id: 1, name: 'itemku', updated_at: mockDateNow}], http_status_code: 200, item_per_page: 10, message: 'Success', next_page: null, prev_page: null, success: true, total_item: 1});
 });
 it('should use basic pagination (getManyAndCount)', async () => {
   await getRepository(MyEntity).insert({
