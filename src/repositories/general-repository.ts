@@ -124,7 +124,7 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     let nextPage: any = null;
     const prevPage = Math.abs(page - 1) ? Math.abs(page - 1) : null;
 
-    if (result.length > itemPerPage) {
+    if (result.length > itemPerPage && itemPerPage > 0) {
       result.pop();
       nextPage = page + 1;
     }
