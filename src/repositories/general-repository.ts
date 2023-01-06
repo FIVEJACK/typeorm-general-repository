@@ -194,9 +194,10 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const last_modified_by = getDefault(filter['last_modified_by']);
     const last_modified_by_id = getDefault(filter['last_modified_by_id']);
     const use_simple_pagination = getDefault(filter['use_simple_pagination'], false);
-
     this.setuseSimplePagination(Boolean(use_simple_pagination));
-
+    if (filter['per_page'] == 0) {
+      this.setuseSimplePagination(Boolean(false));
+    }
     const columnName = this.repo()
       .manager.connection.getMetadata(this.model)
       .ownColumns.map(column => column.propertyName);
