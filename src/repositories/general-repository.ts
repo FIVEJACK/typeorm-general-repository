@@ -40,7 +40,17 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     return toReturn;
   }
 
-  async updateById(id: number, data: T) {
+  /**
+   *
+   * Update data by id and update null on column that exists in columnToNull.
+   *
+   * @param id - id to update
+   * @param data - Data to update
+   * @param columnToNull - Array of column name that will change to null. Make sure the column name exists
+   * @returns
+   */
+
+  async updateById(id: number, data: T, columnToNull: string[] = []) {
     const dataUpdate: any = data;
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
@@ -48,6 +58,9 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
       if (dataUpdate[keys] == null || dataUpdate[keys] == undefined) {
         delete dataUpdate[keys];
       }
+    }
+    for (let col of columnToNull) {
+      dataUpdate[col] = undefined;
     }
 
     const result = await queryBuilder

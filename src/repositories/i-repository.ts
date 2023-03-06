@@ -5,7 +5,7 @@ export interface IRepository<T> {
 
   insertBulkData(data: Array<T>): any;
 
-  updateById(id: number, data: T): any;
+  updateById(id: number, data: T, columnToNull?: string[]): any;
 
   deleteById(id: number): any;
 
