@@ -59,6 +59,26 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     return toReturn;
   }
 
+  /**
+   *
+   * Update data by id. put value = null to change column data to null
+   *
+   * @param id - id to update
+   * @param columnToNull - Object with column name as key and value to update. value = null for changing column to null
+   * @returns
+   */
+  async updateNullValue(id: number, columnToNull: {[columnName: string]: any}) {
+    const toReturn = new returnObject();
+    const queryBuilder = this.repo().createQueryBuilder();
+    const result = await queryBuilder
+      .update()
+      .set(columnToNull as any)
+      .where('id = :id', {id: id})
+      .execute();
+    toReturn.setData(result as any, 1, 1, 1);
+    return toReturn;
+  }
+
   async deleteById(id: number) {
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();

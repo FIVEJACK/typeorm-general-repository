@@ -7,6 +7,8 @@ export interface IRepository<T> {
 
   updateById(id: number, data: T): any;
 
+  updateNullValue(id: number, columnToNull: {[columnName: string]: any}): any;
+
   deleteById(id: number): any;
 
   retrieveData(filter: ObjectLiteral): any;
