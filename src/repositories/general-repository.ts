@@ -44,15 +44,22 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const dataUpdate: any = data;
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    for (let keys of Object.keys(data)) {
-      if (dataUpdate[keys] == null || dataUpdate[keys] == undefined) {
-        delete dataUpdate[keys];
+    
+    // Get valid column names from entity metadata
+    const metadata = this.repo().metadata;
+    const validColumns = new Set(metadata.columns.map((col: any) => col.propertyName));
+    
+    // Filter out undefined/null values and invalid properties
+    const normalizedData: any = {};
+    for (let key of Object.keys(data)) {
+      if (dataUpdate[key] !== null && dataUpdate[key] !== undefined && validColumns.has(key)) {
+        normalizedData[key] = dataUpdate[key];
       }
     }
 
     const result = await queryBuilder
       .update()
-      .set(data as any)
+      .set(normalizedData)
       .where('id = :id', {id: id})
       .execute();
     toReturn.setData(result as any, 1, 1, 1);
@@ -252,9 +259,10 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
 
     if (selects != undefined && Array.isArray(selects)) {
       let arrSelects = [];
+      const alias = (queryBuilder as any).alias || (queryBuilder as any).expressionMap?.mainAlias?.name || this.model.name;
 
       for (let i = 0; i < selects.length; i++) {
-        arrSelects[i] = this.model.name + '.' + selects[i];
+        arrSelects[i] = alias + '.' + selects[i];
       }
 
       queryBuilder = queryBuilder.select(arrSelects);
