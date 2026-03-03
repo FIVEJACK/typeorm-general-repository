@@ -1,7 +1,7 @@
 import {IRepository} from './i-repository';
 import returnObject from '../helpers/return-object';
 import {ObjectLiteral, Repository, SelectQueryBuilder, EntityManager} from 'typeorm';
-import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from '../helpers/constants';
+import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE, MAX_LIMIT_FOR_OFFSET} from '../helpers/constants';
 import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
 import {CommonModel} from '../models/common-model';
@@ -153,12 +153,12 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const itemPerPage = filter['per_page'] === undefined || filter['per_page'] < 0 ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
     const page = filter['page'] === undefined || filter['page'] <= 0 ? DEFAULT_PAGE : filter['page'];
 
-    if (itemPerPage > 0) {
-      queryBuilder.limit(itemPerPage + extraData);
-    }
-
     const skip = (page - 1) * itemPerPage;
     queryBuilder.offset(skip);
+
+    // RDBMS (e.g. SQLite) require LIMIT when using OFFSET
+    const limit = itemPerPage > 0 ? itemPerPage + extraData : MAX_LIMIT_FOR_OFFSET;
+    queryBuilder.limit(limit);
 
     const [result, count] = await this.executeRetrieveDataQuery(queryBuilder);
 

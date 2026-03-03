@@ -10,3 +10,5 @@ export const BAD_REQUEST_STATUS_CODE = 400;
 // Query defaults
 export const DEFAULT_MAX_ITEM_PER_PAGE = 10;
 export const DEFAULT_PAGE = 1;
+/** Max limit when using offset so RDBMS (e.g. SQLite) get LIMIT with OFFSET. */
+export const MAX_LIMIT_FOR_OFFSET = 2147483647;
