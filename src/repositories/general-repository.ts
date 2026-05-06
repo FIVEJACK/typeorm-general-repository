@@ -1,7 +1,7 @@
 import {IRepository} from './i-repository';
 import returnObject from '../helpers/return-object';
 import {ObjectLiteral, Repository, SelectQueryBuilder, EntityManager} from 'typeorm';
-import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from '../helpers/constants';
+import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE, MAX_LIMIT_FOR_OFFSET} from '../helpers/constants';
 import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
 import {CommonModel} from '../models/common-model';
@@ -44,15 +44,22 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const dataUpdate: any = data;
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    for (let keys of Object.keys(data)) {
-      if (dataUpdate[keys] == null || dataUpdate[keys] == undefined) {
-        delete dataUpdate[keys];
+    
+    // Get valid column names from entity metadata
+    const metadata = this.repo().metadata;
+    const validColumns = new Set(metadata.columns.map((col: any) => col.propertyName));
+    
+    // Filter out undefined/null values and invalid properties
+    const normalizedData: any = {};
+    for (let key of Object.keys(data)) {
+      if (dataUpdate[key] !== null && dataUpdate[key] !== undefined && validColumns.has(key)) {
+        normalizedData[key] = dataUpdate[key];
       }
     }
 
     const result = await queryBuilder
       .update()
-      .set(data as any)
+      .set(normalizedData)
       .where('id = :id', {id: id})
       .execute();
     toReturn.setData(result as any, 1, 1, 1);
@@ -146,12 +153,12 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const itemPerPage = filter['per_page'] === undefined || filter['per_page'] < 0 ? DEFAULT_MAX_ITEM_PER_PAGE : filter['per_page'];
     const page = filter['page'] === undefined || filter['page'] <= 0 ? DEFAULT_PAGE : filter['page'];
 
-    if (itemPerPage > 0) {
-      queryBuilder.limit(itemPerPage + extraData);
-    }
-
     const skip = (page - 1) * itemPerPage;
     queryBuilder.offset(skip);
+
+    // RDBMS (e.g. SQLite) require LIMIT when using OFFSET
+    const limit = itemPerPage > 0 ? itemPerPage + extraData : MAX_LIMIT_FOR_OFFSET;
+    queryBuilder.limit(limit);
 
     const [result, count] = await this.executeRetrieveDataQuery(queryBuilder);
 
@@ -252,9 +259,10 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
 
     if (selects != undefined && Array.isArray(selects)) {
       let arrSelects = [];
+      const alias = (queryBuilder as any).alias || (queryBuilder as any).expressionMap?.mainAlias?.name || this.model.name;
 
       for (let i = 0; i < selects.length; i++) {
-        arrSelects[i] = this.model.name + '.' + selects[i];
+        arrSelects[i] = alias + '.' + selects[i];
       }
 
       queryBuilder = queryBuilder.select(arrSelects);
