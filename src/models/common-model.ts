@@ -16,10 +16,16 @@ export abstract class CommonModel {
   }
 
   public scopeIds(query: any, ids: Array<any>) {
+    if (ids.length === 0) {
+      return query.andWhere('1 = 0');
+    }
     return query.andWhere(this.constructor.name + '.' + this.primaryKey() + ' IN (:...ids)', {ids: ids});
   }
 
   public scopeExcludeIds(query: any, ids: Array<any>) {
+    if (ids.length === 0) {
+      return query;
+    }
     return query.andWhere(this.constructor.name + '.' + this.primaryKey() + ' NOT IN (:...ids)', {ids: ids});
   }
 
