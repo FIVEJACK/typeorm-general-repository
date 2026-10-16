@@ -1,7 +1,8 @@
 import {IRepository} from './i-repository';
 import returnObject from '../helpers/return-object';
 import {ObjectLiteral, Repository, SelectQueryBuilder, EntityManager} from 'typeorm';
-import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE} from '../helpers/constants';
+import {DEFAULT_MAX_ITEM_PER_PAGE, DEFAULT_PAGE, READ_TIME_LIMIT_PARAM} from '../helpers/constants';
+import {limitReadTime} from '../helpers/read-time-limit';
 import {getDefault} from '../helpers/common-helper';
 import {createProxy, ProxyQuery} from './proxy-repository';
 import {CommonModel} from '../models/common-model';
@@ -284,8 +285,19 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
   }
 
   protected applyAllQuery(queryBuilder: ProxyQuery<T>, filter: ObjectLiteral) {
+    const readTimeLimitMs = filter[READ_TIME_LIMIT_PARAM];
+
+    if (readTimeLimitMs !== undefined) {
+      delete filter[READ_TIME_LIMIT_PARAM];
+    }
+
     this.applySelect(queryBuilder, filter);
     this.applyFilter(queryBuilder, filter);
     this.applySort(queryBuilder, filter);
+
+    if (readTimeLimitMs !== undefined) {
+      filter[READ_TIME_LIMIT_PARAM] = readTimeLimitMs;
+      limitReadTime(queryBuilder, readTimeLimitMs);
+    }
   }
 }
