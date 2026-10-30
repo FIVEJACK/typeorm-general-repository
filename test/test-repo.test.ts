@@ -36,7 +36,7 @@ afterEach(async () => {
   return await conn.close();
 });
 
-it('should able to add proxy and do query', async done => {
+it('should able to add proxy and do query', async () => {
   await getRepository(MyEntity).insert({
     name: 'itemku',
   });
@@ -54,7 +54,6 @@ it('should able to add proxy and do query', async done => {
 
   expect(result[0].id).toEqual(1);
   expect(result[0].name).toEqual('itemku');
-  done();
 });
 
 it('should handle per_page = 0 for retrieve', async () => {
