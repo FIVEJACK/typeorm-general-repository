@@ -9,6 +9,12 @@ export class MyEntity extends CommonModel {
   @Column()
   name?: string;
 
+  @Column({select: false, nullable: true})
+  secret?: string;
+
+  @Column({type: 'simple-json', nullable: true})
+  extra?: object;
+
   public scopeId(query: ProxyQuery<MyEntity>, id: number) {
     return query.andWhere('id = :id', {id: id});
   }
@@ -144,4 +150,33 @@ it('should ignore selects that are not entity columns', async () => {
   const nonString = await repo.retrieveData({selects: [['id'], {name: 'name'}, 'id'] as any});
   expect(nonString.data[0].id).toEqual(1);
   expect(nonString.data[0].name).toBeUndefined();
+});
+
+it('should not select columns marked select: false', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+    secret: 'hidden',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  const result = await repo.retrieveData({selects: ['id', 'secret']});
+  expect(result.data[0].id).toEqual(1);
+  expect(result.data[0].secret).toBeUndefined();
+});
+
+it('should reject object values in updateById for non-JSON columns', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  await expect(repo.updateById(1, {name: {length: 1}} as any)).rejects.toThrow('Invalid value for column name');
+  await expect(repo.updateById(1, {name: ['a']} as any)).rejects.toThrow('Invalid value for column name');
+
+  await repo.updateById(1, {name: 'fivejack', extra: {a: 1}} as any);
+  const result = await getRepository(MyEntity).findOne(1);
+  expect(result!.name).toEqual('fivejack');
+  expect(result!.extra).toEqual({a: 1});
 });
