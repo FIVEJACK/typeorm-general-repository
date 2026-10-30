@@ -1,0 +1,66 @@
+# npm Trusted Publishing (OIDC) – no long-lived tokens.
+# One-time setup on npm: Package → Settings → Trusted publishing →
+#   Add GitHub Actions, workflow filename: publish.yml
+
+name: Publish to npm
+
+# Publish only on tag push (not on release: published) to avoid double publish:
+# creating a release from a tag pushes the tag first, then publishes the release.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Tests need sqlite3's install script, so they run without the OIDC permission.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Enable Corepack (Yarn)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Test
+        run: yarn test --ci
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # Required for OIDC trusted publishing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'   # Trusted publishing requires Node 22.14+ and npm 11.5.1+
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Enable Corepack (Yarn)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-scripts
+
+      - name: Build
+        run: yarn build
+
+      - name: Publish to npm
+        run: npm publish --access public --tag release-0.7   # latest stays on the 0.8 line
