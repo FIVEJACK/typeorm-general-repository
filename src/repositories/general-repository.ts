@@ -258,14 +258,17 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const selects: Array<string> = getDefault(filter['selects']);
 
     if (selects != undefined && Array.isArray(selects)) {
-      let arrSelects = [];
       const alias = (queryBuilder as any).alias || (queryBuilder as any).expressionMap?.mainAlias?.name || this.model.name;
+      // Only entity columns may be selected. Anything else would reach the SQL
+      // SELECT list verbatim, because TypeORM does not escape unmapped selections.
+      const columns = this.repo().metadata.columns.map(column => column.propertyPath);
+      const arrSelects: string[] = selects
+        .filter(select => columns.indexOf(select) !== -1)
+        .map(select => alias + '.' + select);
 
-      for (let i = 0; i < selects.length; i++) {
-        arrSelects[i] = alias + '.' + selects[i];
+      if (arrSelects.length > 0) {
+        queryBuilder = queryBuilder.select(arrSelects);
       }
-
-      queryBuilder = queryBuilder.select(arrSelects);
     }
   }
 

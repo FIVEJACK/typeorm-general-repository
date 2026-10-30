@@ -36,7 +36,7 @@ afterEach(async () => {
   return await conn.close();
 });
 
-it('should able to add proxy and do query', async done => {
+it('should able to add proxy and do query', async () => {
   await getRepository(MyEntity).insert({
     name: 'itemku',
   });
@@ -54,7 +54,6 @@ it('should able to add proxy and do query', async done => {
 
   expect(result[0].id).toEqual(1);
   expect(result[0].name).toEqual('itemku');
-  done();
 });
 
 it('should handle per_page = 0 for retrieve', async () => {
@@ -121,4 +120,27 @@ it('should handle retrieve by id return 0 if no data instead of 1', async () => 
 
   const result2 = await repo.findById(1);
   expect(result2.total_item).toEqual(1);
+});
+
+it('should ignore selects that are not entity columns', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  const partial = await repo.retrieveData({selects: ['id', 'no_such_column', 'id, 1+1 AS calc']});
+  expect(partial.data[0].id).toEqual(1);
+  expect(partial.data[0].name).toBeUndefined();
+
+  const allInvalid = await repo.retrieveData({selects: ['no_such_column']});
+  expect(allInvalid.data[0].id).toEqual(1);
+  expect(allInvalid.data[0].name).toEqual('itemku');
+
+  const empty = await repo.retrieveData({selects: []});
+  expect(empty.data[0].name).toEqual('itemku');
+
+  const nonString = await repo.retrieveData({selects: [['id'], {name: 'name'}, 'id'] as any});
+  expect(nonString.data[0].id).toEqual(1);
+  expect(nonString.data[0].name).toBeUndefined();
 });
