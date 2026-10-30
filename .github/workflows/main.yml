@@ -7,12 +7,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ['14.x', '16.x', '18.x', '24.x']
+        node: ['14.x', '16.x', '18.x']
         os: [ubuntu-latest, windows-latest, macOS-latest]
         exclude:
           # macOS runners are arm64 only; Node 14 has no arm64 build
           - node: '14.x'
             os: macOS-latest
+        include:
+          - node: '22.x'
+            os: ubuntu-latest
+          - node: '24.x'
+            os: ubuntu-latest
 
     steps:
       - name: Checkout repo

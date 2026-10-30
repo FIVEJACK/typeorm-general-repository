@@ -51,16 +51,17 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     }
 
     // mysql expands object and array parameters into SQL (CVE-2025-60542), so
-    // only JSON columns may receive them.
-    const metadata = this.repo().metadata;
-    for (let keys of Object.keys(dataUpdate)) {
-      const value = dataUpdate[keys];
-      if (typeof value !== 'object' || value instanceof Date || ArrayBuffer.isView(value)) {
+    // only columns that serialize them first may receive them.
+    for (const column of this.repo().metadata.columns) {
+      const value = column.getEntityValue(dataUpdate);
+      if (value == null || typeof value !== 'object' || value instanceof Date || ArrayBuffer.isView(value)) {
         continue;
       }
-      const column = metadata.findColumnWithPropertyPath(keys);
-      if (!column || ['json', 'jsonb', 'simple-json', 'simple-array'].indexOf(column.type as string) === -1) {
-        throw new Error(`Invalid value for column ${keys}`);
+      if (column.transformer || column.relationMetadata) {
+        continue;
+      }
+      if (['json', 'jsonb', 'simple-json', 'simple-array'].indexOf(column.type as string) === -1) {
+        throw new Error(`Invalid value for column ${column.propertyPath}`);
       }
     }
 

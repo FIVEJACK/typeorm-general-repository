@@ -1,6 +1,11 @@
 import {Column, createConnection, Entity, EntityManager, getConnection, getManager, getRepository, PrimaryGeneratedColumn} from 'typeorm';
 import {CommonModel, createProxy, GeneralRepository, ProxyQuery} from '../src';
 
+export class MyMeta {
+  @Column({nullable: true})
+  note?: string;
+}
+
 @Entity()
 export class MyEntity extends CommonModel {
   @PrimaryGeneratedColumn()
@@ -14,6 +19,16 @@ export class MyEntity extends CommonModel {
 
   @Column({type: 'simple-json', nullable: true})
   extra?: object;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    transformer: {to: value => (value == null ? value : JSON.stringify(value)), from: value => (value == null ? value : JSON.parse(value))},
+  })
+  payload?: object;
+
+  @Column(() => MyMeta)
+  meta?: MyMeta;
 
   public scopeId(query: ProxyQuery<MyEntity>, id: number) {
     return query.andWhere('id = :id', {id: id});
@@ -179,4 +194,17 @@ it('should reject object values in updateById for non-JSON columns', async () =>
   const result = await getRepository(MyEntity).findOne(1);
   expect(result!.name).toEqual('fivejack');
   expect(result!.extra).toEqual({a: 1});
+});
+
+it('should accept object values in updateById for transformer and embedded columns', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  await repo.updateById(1, {payload: {b: 2}, meta: {note: 'checked'}} as any);
+  const result = await getRepository(MyEntity).findOne(1);
+  expect(result!.payload).toEqual({b: 2});
+  expect(result!.meta!.note).toEqual('checked');
 });
