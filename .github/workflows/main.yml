@@ -1,5 +1,7 @@
 name: CI
 on: [push]
+permissions:
+  contents: read
 jobs:
   build:
     name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
@@ -7,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ['20.x', '22.x', '24.x']
+        node: ['22.x', '24.x', '26.x']
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
@@ -20,7 +22,7 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install deps and build (with cache)
-        uses: bahmutov/npm-install@v1
+        uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1.12.1
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
