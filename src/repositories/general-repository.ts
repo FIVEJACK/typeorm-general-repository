@@ -50,6 +50,21 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
       }
     }
 
+    // mysql expands object and array parameters into SQL (CVE-2025-60542), so
+    // only columns that serialize them first may receive them.
+    for (const column of this.repo().metadata.columns) {
+      const value = column.getEntityValue(dataUpdate);
+      if (value == null || typeof value !== 'object' || value instanceof Date || ArrayBuffer.isView(value)) {
+        continue;
+      }
+      if (column.transformer || column.relationMetadata) {
+        continue;
+      }
+      if (['json', 'jsonb', 'simple-json', 'simple-array'].indexOf(column.type as string) === -1) {
+        throw new Error(`Invalid value for column ${column.propertyPath}`);
+      }
+    }
+
     const result = await queryBuilder
       .update()
       .set(data as any)
@@ -251,13 +266,18 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const selects: Array<string> = getDefault(filter['selects']);
 
     if (selects != undefined && Array.isArray(selects)) {
-      let arrSelects = [];
+      // Only entity columns may be selected. Anything else would reach the SQL
+      // SELECT list verbatim, because TypeORM does not escape unmapped selections.
+      const columns = this.repo()
+        .metadata.columns.filter(column => column.isSelect !== false)
+        .map(column => column.propertyPath);
+      const arrSelects: string[] = selects
+        .filter(select => columns.indexOf(select) !== -1)
+        .map(select => this.model.name + '.' + select);
 
-      for (let i = 0; i < selects.length; i++) {
-        arrSelects[i] = this.model.name + '.' + selects[i];
+      if (arrSelects.length > 0) {
+        queryBuilder = queryBuilder.select(arrSelects);
       }
-
-      queryBuilder = queryBuilder.select(arrSelects);
     }
   }
 
