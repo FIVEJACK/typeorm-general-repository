@@ -57,9 +57,13 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
+        env:
+          NODE_AUTH_TOKEN: ''   # setup-node v7 no longer exports a dummy token; yarn 1 needs it set
         run: yarn install --frozen-lockfile --ignore-scripts
 
       - name: Build
+        env:
+          NODE_AUTH_TOKEN: ''
         run: yarn build
 
       - name: Publish to npm
