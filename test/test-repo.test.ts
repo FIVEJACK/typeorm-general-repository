@@ -9,6 +9,9 @@ export class MyEntity extends CommonModel {
   @Column()
   name?: string;
 
+  @Column({select: false, nullable: true})
+  secret?: string;
+
   public scopeId(query: ProxyQuery<MyEntity>, id: number) {
     return query.andWhere('id = :id', {id: id});
   }
@@ -143,4 +146,21 @@ it('should ignore selects that are not entity columns', async () => {
   const nonString = await repo.retrieveData({selects: [['id'], {name: 'name'}, 'id'] as any});
   expect(nonString.data[0].id).toEqual(1);
   expect(nonString.data[0].name).toBeUndefined();
+});
+
+it('should not select columns hidden with select: false', async () => {
+  await getRepository(MyEntity).insert({
+    name: 'itemku',
+    secret: 'hidden',
+  });
+
+  const repo = new MyRepository(getManager());
+
+  const withId = await repo.retrieveData({selects: ['id', 'secret']});
+  expect(withId.data[0].id).toEqual(1);
+  expect(withId.data[0].secret).toBeUndefined();
+
+  const onlyHidden = await repo.retrieveData({selects: ['secret']});
+  expect(onlyHidden.data[0].name).toEqual('itemku');
+  expect(onlyHidden.data[0].secret).toBeUndefined();
 });
