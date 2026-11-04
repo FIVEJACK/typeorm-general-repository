@@ -270,6 +270,15 @@ public  (query: ProxyQuery<CommonModel>, id: any) {
 
 ```
 
+# Read time limit
+
+A `retrieveData` filter may carry `read_time_limit_ms`. The SELECTs that `applyAllQuery` prepares (the list and its count) are then sent as `SELECT /*+ MAX_EXECUTION_TIME(<ms>) */ ...`, and MySQL stops them once they run longer. The hint is part of the statement, not the connection, so it never leaks to other requests on a pooled connection.
+
+- The value is clamped to `DB_READ_MAX_EXECUTION_TIME_MS` (default `15000`, `0` turns the feature off). Absent, blank, non-numeric or non-positive values leave the query unlimited.
+- `read_time_limit_ms` is hidden from `applySelect` / `applyFilter` / `applySort`, so it is never read as a filter.
+- `isReadTimeLimitExceeded(error)` is true for an error raised by a read stopped this way (MySQL 3024, or 1317 on a statement that carried the hint).
+- `limitReadTime(queryBuilder, ms)` applies the same cap to a query builder built outside `applyAllQuery`.
+
 ## Full Example
 
 ### Model

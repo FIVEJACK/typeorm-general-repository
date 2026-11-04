@@ -10,3 +10,5 @@ export const BAD_REQUEST_STATUS_CODE = 400;
 // Query defaults
 export const DEFAULT_MAX_ITEM_PER_PAGE = 10;
 export const DEFAULT_PAGE = 1;
+export const READ_TIME_LIMIT_PARAM = 'read_time_limit_ms';
+export const DEFAULT_READ_TIME_LIMIT_CEILING_MS = 15000;
