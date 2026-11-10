@@ -44,16 +44,34 @@ export abstract class GeneralRepository<T extends CommonModel> implements IRepos
     const dataUpdate: any = data;
     const toReturn = new returnObject();
     const queryBuilder = this.repo().createQueryBuilder();
-    
-    // Get valid column names from entity metadata
+
+    // Get valid column and embedded property names from entity metadata
     const metadata = this.repo().metadata;
-    const validColumns = new Set(metadata.columns.map((col: any) => col.propertyName));
-    
+    const validColumns = new Set([
+      ...metadata.columns.map((col: any) => col.propertyName),
+      ...metadata.embeddeds.map((embedded: any) => embedded.propertyName),
+    ]);
+
     // Filter out undefined/null values and invalid properties
     const normalizedData: any = {};
     for (let key of Object.keys(data)) {
       if (dataUpdate[key] !== null && dataUpdate[key] !== undefined && validColumns.has(key)) {
         normalizedData[key] = dataUpdate[key];
+      }
+    }
+
+    // mysql expands object and array parameters into SQL (CVE-2025-60542), so
+    // only columns that serialize them first may receive them.
+    for (const column of metadata.columns) {
+      const value = column.getEntityValue(normalizedData);
+      if (value == null || typeof value !== 'object' || value instanceof Date || ArrayBuffer.isView(value)) {
+        continue;
+      }
+      if (column.transformer || column.relationMetadata) {
+        continue;
+      }
+      if (['json', 'jsonb', 'simple-json', 'simple-array'].indexOf(column.type as string) === -1) {
+        throw new Error(`Invalid value for column ${column.propertyPath}`);
       }
     }
 

@@ -75,6 +75,19 @@ it('should handle Name filter', async () => {
   expect(result2.data[0].name).toEqual('fivejack');
 });
 
+it('should not build an empty IN list for ids and exclude_ids', async () => {
+  await getRepository(MyEntity).insert({name: 'itemku'});
+  const repo = new MyRepository(getManager());
+
+  expect((await repo.retrieveData({ids: []})).total_item).toEqual(0);
+  expect((await repo.retrieveData({exclude_ids: []})).total_item).toEqual(1);
+
+  const query: any = {andWhere: jest.fn().mockReturnThis()};
+  new MyEntity().scopeIds(query, []);
+  new MyEntity().scopeExcludeIds(query, []);
+  expect(query.andWhere.mock.calls).toEqual([['1 = 0']]);
+});
+
 it('should return using simple pagination (getMany)', async () => {
   await getRepository(MyEntity).insert({
     name: 'itemku',
